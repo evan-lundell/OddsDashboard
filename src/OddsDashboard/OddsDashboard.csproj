@@ -16,4 +16,12 @@
     <ProjectReference Include="..\OddsDashboard.Shared\OddsDashboard.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="SampleData\ncaab_results.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

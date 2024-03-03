@@ -22,10 +22,18 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddLogging();
-builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
+
+if ((builder.Configuration[Constants.EnvironmentEnvVar] ?? "Development") == "Development")
 {
-    options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
-});
+    builder.Services.AddScoped<IOddsService, OddsFileService>();
+}
+else
+{
+    builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
+    {
+        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+    });
+}
 
 var app = builder.Build();
 

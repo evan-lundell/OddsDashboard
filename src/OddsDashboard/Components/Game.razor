@@ -1,0 +1,173 @@
+@using OddsDashboard.Shared.Dtos
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div>
+    <h3>@Time</h3>
+    <table>
+        <thead>
+        <tr>
+            <th></th>
+            <th>Spread</th>
+            <th>Total</th>
+            <th>Money</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>@(Odds?.AwayTeam ?? "")</td>
+            <td>
+                <p>
+                    @(_awaySpreadPoint > 0 ? $"+{_awaySpreadPoint}" : _awaySpreadPoint)
+                </p>
+                <p>
+                    @(_awaySpreadPrice > 0 ? $"+{_awaySpreadPrice}" : _awaySpreadPrice)
+                </p>
+            </td>
+            <td>
+                <p>
+                    @($"O {_overTotalPoint}")
+                </p>
+                <p>
+                    @(_overTotalPrice > 0 ? $"+{_overTotalPrice}" : _overTotalPrice)
+                </p>
+            </td>
+            <td>
+                @(_awayMoneyLinePrice > 0 ? $"+{_awayMoneyLinePrice}" : _awayMoneyLinePrice)
+            </td>
+        </tr>
+        <tr>
+            <td>@(Odds?.HomeTeam ?? "")</td>
+            <td>
+                <p>
+                    @(_homeSpreadPoint > 0 ? $"+{_homeSpreadPoint}" : _homeSpreadPoint)
+                </p>
+                <p>
+                    @(_homeSpreadPrice > 0 ? $"+{_homeSpreadPrice}" : _homeSpreadPrice)
+                </p>
+            </td>
+            <td>
+                <p>
+                    @($"U {_underTotalPoint}")
+                </p>
+                <p>
+                    @(_underTotalPrice > 0 ? $"+{_underTotalPrice}" : _underTotalPrice)
+                </p>
+            </td>
+            <td>
+                @(_homeMoneyLinePrice > 0 ? $"+{_homeMoneyLinePrice}" : _homeMoneyLinePrice)
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private OddsDto? _odds;
+
+    [Parameter]
+    public OddsDto? Odds
+    {
+        get => _odds;
+        set
+        {
+            _odds = value;
+            SetOutcomes();
+        }
+    }
+    
+    [Parameter]
+    public long Time { get; set; }
+
+    private decimal? _homeSpreadPoint;
+    private decimal? _awaySpreadPoint;
+    private int? _homeSpreadPrice;
+    private int? _awaySpreadPrice;
+    private decimal? _overTotalPoint;
+    private decimal? _underTotalPoint;
+    private int? _overTotalPrice;
+    private int? _underTotalPrice;
+    private decimal? _homeMoneyLinePrice;
+    private decimal? _awayMoneyLinePrice;
+
+    private void SetOutcomes()
+    {
+        if (Odds == null)
+        {
+            _homeSpreadPoint = null;
+            _awaySpreadPoint = null;
+            _homeSpreadPoint = null;
+            _awaySpreadPoint = null;
+            _overTotalPoint = null;
+            _underTotalPoint = null;
+            _overTotalPrice = null;
+            _underTotalPrice = null;
+            _homeMoneyLinePrice = null;
+            _awayMoneyLinePrice = null;
+            return;
+        }
+        foreach (var market in Odds.Bookmakers.First(b => b.Key == "fanduel").Markets)
+        {
+            switch (market.Key)
+            {
+                case "h2h":
+                    SetHeadToHead(market.Outcomes, Odds.AwayTeam, Odds.HomeTeam);
+                    break;
+                case "totals":
+                    SetTotals(market.Outcomes);
+                    break;
+                case "spreads":
+                    SetSpreads(market.Outcomes, Odds.AwayTeam, Odds.HomeTeam);
+                    break;
+            }
+        }
+    }
+
+    private void SetHeadToHead(IEnumerable<OutcomeDto> outcomes, string awayTeam, string homeTeam)
+    {
+        foreach (var outcome in outcomes)
+        {
+            if (outcome.Name == awayTeam)
+            {
+                _awayMoneyLinePrice = outcome.Price;
+            }
+            else
+            {
+                _homeMoneyLinePrice = outcome.Price;
+            }
+        }
+    }
+
+    private void SetTotals(IEnumerable<OutcomeDto> outcomes)
+    {
+        foreach (var outcome in outcomes)
+        {
+            if (outcome.Name == "Over")
+            {
+                _overTotalPrice = outcome.Price;
+                _overTotalPoint = outcome.Point ?? 0;
+            }
+            else
+            {
+                _underTotalPrice = outcome.Price;
+                _underTotalPoint = outcome.Point ?? 0;
+            }
+        }
+    }
+
+    private void SetSpreads(IEnumerable<OutcomeDto> outcomes, string awayTeam, string homeSteam)
+    {
+        foreach (var outcome in outcomes)
+        {
+            if (outcome.Name == awayTeam)
+            {
+                _awaySpreadPrice = outcome.Price;
+                _awaySpreadPoint = outcome.Point ?? 0;
+            }
+            else
+            {
+                _homeSpreadPrice = outcome.Price;
+                _homeSpreadPoint = outcome.Point ?? 0;
+            }
+        }
+    }
+}
