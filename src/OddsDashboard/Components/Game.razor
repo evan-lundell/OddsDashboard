@@ -1,83 +1,112 @@
 @using OddsDashboard.Shared.Dtos
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div>
-    <h3>@Time</h3>
-    <table>
-        <thead>
-        <tr>
-            <th></th>
-            <th>Spread</th>
-            <th>Total</th>
-            <th>Money</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>@(Odds?.AwayTeam ?? "")</td>
-            <td>
+<div class="block m-2 p-6 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+    <div class="grid grid-cols-5 text-slate-200">
+        <div class="col-span-2">
+        </div>
+        <div>
+            Spread
+        </div>
+        <div>
+            Total
+        </div>
+        <div>
+            Money
+        </div>
+        <div class="col-span-2">
+            @Odds.AwayTeam
+        </div>
+        <div>
+            @if (_awaySpreadPoint == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 <p>
                     @(_awaySpreadPoint > 0 ? $"+{_awaySpreadPoint}" : _awaySpreadPoint)
                 </p>
                 <p>
                     @(_awaySpreadPrice > 0 ? $"+{_awaySpreadPrice}" : _awaySpreadPrice)
                 </p>
-            </td>
-            <td>
+            }
+        </div>
+        <div>
+            @if (_overTotalPoint == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 <p>
                     @($"O {_overTotalPoint}")
                 </p>
                 <p>
                     @(_overTotalPrice > 0 ? $"+{_overTotalPrice}" : _overTotalPrice)
                 </p>
-            </td>
-            <td>
+            }
+        </div>
+        <div>
+            @if (_awayMoneyLinePrice == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 @(_awayMoneyLinePrice > 0 ? $"+{_awayMoneyLinePrice}" : _awayMoneyLinePrice)
-            </td>
-        </tr>
-        <tr>
-            <td>@(Odds?.HomeTeam ?? "")</td>
-            <td>
+            }
+        </div>
+        <div class="col-span-2">
+            @Odds.HomeTeam
+        </div>
+        <div>
+            @if (_homeSpreadPoint == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 <p>
                     @(_homeSpreadPoint > 0 ? $"+{_homeSpreadPoint}" : _homeSpreadPoint)
                 </p>
                 <p>
                     @(_homeSpreadPrice > 0 ? $"+{_homeSpreadPrice}" : _homeSpreadPrice)
                 </p>
-            </td>
-            <td>
+            }
+        </div>
+        <div xs="2">
+            @if (_underTotalPoint == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 <p>
-                    @($"U {_underTotalPoint}")
+                    @($"O {_underTotalPoint}")
                 </p>
                 <p>
-                    @(_underTotalPrice > 0 ? $"+{_underTotalPrice}" : _underTotalPrice)
+                    @(_underTotalPoint > 0 ? $"+{_underTotalPoint}" : _underTotalPoint)
                 </p>
-            </td>
-            <td>
+            }
+        </div>
+        <div xs="2">
+            @if (_homeMoneyLinePrice == null)
+            {
+                <p>-</p>
+            }
+            else
+            {
                 @(_homeMoneyLinePrice > 0 ? $"+{_homeMoneyLinePrice}" : _homeMoneyLinePrice)
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            }
+        </div>
+    </div>
 </div>
 
 @code {
-    private OddsDto? _odds;
-
     [Parameter]
-    public OddsDto? Odds
-    {
-        get => _odds;
-        set
-        {
-            _odds = value;
-            SetOutcomes();
-        }
-    }
+    public required OddsDto Odds { get; set; }
     
-    [Parameter]
-    public long Time { get; set; }
-
     private decimal? _homeSpreadPoint;
     private decimal? _awaySpreadPoint;
     private int? _homeSpreadPrice;
@@ -89,23 +118,49 @@
     private decimal? _homeMoneyLinePrice;
     private decimal? _awayMoneyLinePrice;
 
+    private readonly string[] _bookmakerPrecedence =
+    {
+        "fanduel",
+        "betmgm",
+        "draftkings",
+        "williamhill_us"
+    };
+    
+    protected override void OnParametersSet()
+    {
+        SetOutcomes();
+    }
+
     private void SetOutcomes()
     {
-        if (Odds == null)
+        _homeSpreadPoint = null;
+        _awaySpreadPoint = null;
+        _homeSpreadPoint = null;
+        _awaySpreadPoint = null;
+        _overTotalPoint = null;
+        _underTotalPoint = null;
+        _overTotalPrice = null;
+        _underTotalPrice = null;
+        _homeMoneyLinePrice = null;
+        _awayMoneyLinePrice = null;
+
+        BookmakerDto? bookmaker = null;
+        foreach (var bookmakerKey in _bookmakerPrecedence)
         {
-            _homeSpreadPoint = null;
-            _awaySpreadPoint = null;
-            _homeSpreadPoint = null;
-            _awaySpreadPoint = null;
-            _overTotalPoint = null;
-            _underTotalPoint = null;
-            _overTotalPrice = null;
-            _underTotalPrice = null;
-            _homeMoneyLinePrice = null;
-            _awayMoneyLinePrice = null;
-            return;
+            var b = Odds.Bookmakers.FirstOrDefault(b => b.Key == bookmakerKey);
+            if (b != null)
+            {
+                bookmaker = b;
+                break;
+            }
         }
-        foreach (var market in Odds.Bookmakers.First(b => b.Key == "fanduel").Markets)
+
+        if (bookmaker == null)
+        {
+            bookmaker = Odds.Bookmakers.First();
+        }
+        
+        foreach (var market in bookmaker.Markets)
         {
             switch (market.Key)
             {

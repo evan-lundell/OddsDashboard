@@ -1,0 +1,24 @@
+@using OddsDashboard.Shared.Dtos
+
+@if (Odds != null)
+{
+    <div class="p-3 m-5 border-solid border-2 border-sky-200 rounded-lg">
+        <div class="flex justify-center text-slate-200 text-2xl">
+            <h1>@Title</h1>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3">
+            @foreach (var odds in Odds)
+            {
+                <Game Odds="odds" />
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<OddsDto>? Odds { get; set; }
+    
+    [Parameter] 
+    public required string Title { get; set; }
+}

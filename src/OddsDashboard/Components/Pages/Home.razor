@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using OddsDashboard.Services
 @using System.Timers
+@using OddsDashboard.Dtos
 @using OddsDashboard.Shared.Dtos
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject IOddsService OddsService
@@ -9,22 +10,18 @@
 
 @if (_odds == null)
 {
-    <p><em>Loading...</em></p>
+    <Skeleton />
 }
 else
 {
-    @foreach (var odds in _odds)
-    {
-        <Game Odds="odds" Time="_time" />
-    }
+    <GameSection Title="Live" Odds="_odds.LiveOdds" />
+    <GameSection Title="Upcoming" Odds="_odds.UpcomingOdds" />
 }
-
 
 @code
 {
     private readonly Timer _timer = new();
-    private IEnumerable<OddsDto>? _odds;
-    private long _time = DateTime.Now.Ticks;
+    private OddsResultDto? _odds;
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,7 +41,6 @@ else
         InvokeAsync(async () =>
         {
             _odds = await OddsService.GetOdds();
-            _time = DateTime.Now.Ticks;
             StateHasChanged();
         });
     }
