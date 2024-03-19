@@ -21,11 +21,15 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddLogging();
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.TimestampFormat = "HH:mm:ss";
+});
 
-if ((builder.Configuration[Constants.EnvironmentEnvVar] ?? "Development") == "Development")
+if ((builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development") == "Development")
 {
     builder.Services.AddScoped<IOddsService, OddsFileService>();
+    builder.Services.AddScoped<IScoresService, ScoresFileService>();
 }
 else
 {
@@ -33,9 +37,14 @@ else
     {
         options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
     });
+    builder.Services.AddHttpClient<IScoresService, ScoresService>(options =>
+    {
+        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+    });
 }
 
-builder.Services.AddHttpClient();
+builder.Services.AddSingleton<ValidTeamsService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 var app = builder.Build();
 

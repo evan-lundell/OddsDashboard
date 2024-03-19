@@ -1,46 +1,45 @@
 ﻿@page "/"
 @using OddsDashboard.Services
 @using System.Timers
-@using OddsDashboard.Dtos
-@using OddsDashboard.Shared.Dtos
+@using OddsDashboard.Shared.ViewModels
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
-@inject IOddsService OddsService
 @inject IConfiguration Config
+@inject IDashboardService DashboardService
 @implements IDisposable
 
-@if (_odds == null)
+@if (_viewModel == null)
 {
     <Skeleton />
 }
 else
 {
-    <GameSection Title="Live" Odds="_odds.LiveOdds" />
-    <GameSection Title="Upcoming" Odds="_odds.UpcomingOdds" />
+    <GameSection Title="Live" Games="@_viewModel.LiveGames" />
+    <GameSection Title="Upcoming" Games="@_viewModel.UpcomingGames" />
 }
 
 @code
 {
     private readonly Timer _timer = new();
-    private OddsResultDto? _odds;
-
+    private HomeViewModel? _viewModel;
+    
     protected override async Task OnInitializedAsync()
     {
-        _odds = await OddsService.GetOdds();
+        _viewModel = await DashboardService.GetDashboardData();
         if (!double.TryParse(Config["OddsRefreshInterval"], out var interval))
         {
             interval = 60000;
         }
-
+        
         _timer.Interval = interval;
         _timer.Elapsed += (_, _) => TimerCallback();
         _timer.Start();
     }
-
+    
     private void TimerCallback()
     {
         InvokeAsync(async () =>
         {
-            _odds = await OddsService.GetOdds();
+            _viewModel = await DashboardService.GetDashboardData();
             StateHasChanged();
         });
     }

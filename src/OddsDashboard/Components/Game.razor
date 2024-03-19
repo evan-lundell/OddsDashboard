@@ -1,228 +1,99 @@
 @using OddsDashboard.Shared.Dtos
+@using OddsDashboard.Shared.ViewModels
+@using System.Globalization
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div class="block m-2 p-6 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-    <div class="grid grid-cols-5 text-slate-200">
-        <div class="col-span-2">
+<div class="block m-2 py-3 px-6 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+    <div class="grid grid-cols-7 gap-2 text-slate-200">
+        @if (GameViewModel.CommenceTime > DateTime.UtcNow)
+        {
+            <div class="col-span-7 text-xs">
+                @GameViewModel.CommenceTime.ToString("yyyy-MM-dd hh:mm tt")
+            </div>
+        }
+        <div class="col-span-4">
         </div>
-        <div>
+        <div class="text-center text-sm">
             Spread
         </div>
-        <div>
+        <div class="text-center text-sm">
             Total
         </div>
-        <div>
-            Money
+        <div class="text-center text-sm">
+            Money Line
         </div>
-        <div class="col-span-2">
-            @Odds.AwayTeam
+        <div class="col-span-2 grid grid-cols-1 content-center">
+            <TeamNameLabel TeamName="@GameViewModel.AwayTeam"/>
         </div>
-        <div>
-            @if (_awaySpreadPoint == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                <p>
-                    @(_awaySpreadPoint > 0 ? $"+{_awaySpreadPoint}" : _awaySpreadPoint)
-                </p>
-                <p>
-                    @(_awaySpreadPrice > 0 ? $"+{_awaySpreadPrice}" : _awaySpreadPrice)
-                </p>
-            }
+        @if (GameViewModel.Scores == null)
+        {
+            <div class="row-span-2 col-span-2"></div>
+        }
+        else
+        {
+            <ScoreLabel Score="@GameViewModel.Scores.AwayScore"/>
+            <div></div>
+        }
+        @if (GameViewModel.Spreads == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.Spreads.AwayPointString" SecondaryDisplay="@GameViewModel.Spreads.AwayPriceString"/>
+        }
+        @if (GameViewModel.OverUnder == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.OverUnder.OverPointString" SecondaryDisplay="@GameViewModel.OverUnder.OverPriceString"/>
+        }
+        @if (GameViewModel.HeadToHead == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.HeadToHead.AwayPriceString"/>
+        }
+        <div class="col-span-2 grid grid-cols-1 content-center">
+            <TeamNameLabel TeamName="@GameViewModel.HomeTeam"/>
         </div>
-        <div>
-            @if (_overTotalPoint == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                <p>
-                    @($"O {_overTotalPoint}")
-                </p>
-                <p>
-                    @(_overTotalPrice > 0 ? $"+{_overTotalPrice}" : _overTotalPrice)
-                </p>
-            }
-        </div>
-        <div>
-            @if (_awayMoneyLinePrice == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                @(_awayMoneyLinePrice > 0 ? $"+{_awayMoneyLinePrice}" : _awayMoneyLinePrice)
-            }
-        </div>
-        <div class="col-span-2">
-            @Odds.HomeTeam
-        </div>
-        <div>
-            @if (_homeSpreadPoint == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                <p>
-                    @(_homeSpreadPoint > 0 ? $"+{_homeSpreadPoint}" : _homeSpreadPoint)
-                </p>
-                <p>
-                    @(_homeSpreadPrice > 0 ? $"+{_homeSpreadPrice}" : _homeSpreadPrice)
-                </p>
-            }
-        </div>
-        <div xs="2">
-            @if (_underTotalPoint == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                <p>
-                    @($"O {_underTotalPoint}")
-                </p>
-                <p>
-                    @(_underTotalPoint > 0 ? $"+{_underTotalPoint}" : _underTotalPoint)
-                </p>
-            }
-        </div>
-        <div xs="2">
-            @if (_homeMoneyLinePrice == null)
-            {
-                <p>-</p>
-            }
-            else
-            {
-                @(_homeMoneyLinePrice > 0 ? $"+{_homeMoneyLinePrice}" : _homeMoneyLinePrice)
-            }
-        </div>
+        @if (GameViewModel.Scores != null)
+        {
+            <ScoreLabel Score="@GameViewModel.Scores.HomeScore"/>
+            <div></div>
+        }
+        @if (GameViewModel.Spreads == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.Spreads.HomePointString" SecondaryDisplay="@GameViewModel.Spreads.HomePriceString"/>
+        }
+        @if (GameViewModel.OverUnder == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.OverUnder.UnderPointString" SecondaryDisplay="@GameViewModel.OverUnder.UnderPriceString"/>
+        }
+        @if (GameViewModel.HeadToHead == null)
+        {
+            <Outcome PrimaryDisplay="-"/>
+        }
+        else
+        {
+            <Outcome PrimaryDisplay="@GameViewModel.HeadToHead.HomePriceString"/>
+        }
     </div>
 </div>
 
 @code {
     [Parameter]
-    public required OddsDto Odds { get; set; }
-    
-    private decimal? _homeSpreadPoint;
-    private decimal? _awaySpreadPoint;
-    private int? _homeSpreadPrice;
-    private int? _awaySpreadPrice;
-    private decimal? _overTotalPoint;
-    private decimal? _underTotalPoint;
-    private int? _overTotalPrice;
-    private int? _underTotalPrice;
-    private decimal? _homeMoneyLinePrice;
-    private decimal? _awayMoneyLinePrice;
-
-    private readonly string[] _bookmakerPrecedence =
-    {
-        "fanduel",
-        "betmgm",
-        "draftkings",
-        "williamhill_us"
-    };
-    
-    protected override void OnParametersSet()
-    {
-        SetOutcomes();
-    }
-
-    private void SetOutcomes()
-    {
-        _homeSpreadPoint = null;
-        _awaySpreadPoint = null;
-        _homeSpreadPoint = null;
-        _awaySpreadPoint = null;
-        _overTotalPoint = null;
-        _underTotalPoint = null;
-        _overTotalPrice = null;
-        _underTotalPrice = null;
-        _homeMoneyLinePrice = null;
-        _awayMoneyLinePrice = null;
-
-        BookmakerDto? bookmaker = null;
-        foreach (var bookmakerKey in _bookmakerPrecedence)
-        {
-            var b = Odds.Bookmakers.FirstOrDefault(b => b.Key == bookmakerKey);
-            if (b != null)
-            {
-                bookmaker = b;
-                break;
-            }
-        }
-
-        if (bookmaker == null)
-        {
-            bookmaker = Odds.Bookmakers.First();
-        }
-        
-        foreach (var market in bookmaker.Markets)
-        {
-            switch (market.Key)
-            {
-                case "h2h":
-                    SetHeadToHead(market.Outcomes, Odds.AwayTeam, Odds.HomeTeam);
-                    break;
-                case "totals":
-                    SetTotals(market.Outcomes);
-                    break;
-                case "spreads":
-                    SetSpreads(market.Outcomes, Odds.AwayTeam, Odds.HomeTeam);
-                    break;
-            }
-        }
-    }
-
-    private void SetHeadToHead(IEnumerable<OutcomeDto> outcomes, string awayTeam, string homeTeam)
-    {
-        foreach (var outcome in outcomes)
-        {
-            if (outcome.Name == awayTeam)
-            {
-                _awayMoneyLinePrice = outcome.Price;
-            }
-            else
-            {
-                _homeMoneyLinePrice = outcome.Price;
-            }
-        }
-    }
-
-    private void SetTotals(IEnumerable<OutcomeDto> outcomes)
-    {
-        foreach (var outcome in outcomes)
-        {
-            if (outcome.Name == "Over")
-            {
-                _overTotalPrice = outcome.Price;
-                _overTotalPoint = outcome.Point ?? 0;
-            }
-            else
-            {
-                _underTotalPrice = outcome.Price;
-                _underTotalPoint = outcome.Point ?? 0;
-            }
-        }
-    }
-
-    private void SetSpreads(IEnumerable<OutcomeDto> outcomes, string awayTeam, string homeSteam)
-    {
-        foreach (var outcome in outcomes)
-        {
-            if (outcome.Name == awayTeam)
-            {
-                _awaySpreadPrice = outcome.Price;
-                _awaySpreadPoint = outcome.Point ?? 0;
-            }
-            else
-            {
-                _homeSpreadPrice = outcome.Price;
-                _homeSpreadPoint = outcome.Point ?? 0;
-            }
-        }
-    }
+    public required GameViewModel GameViewModel { get; set; }
 }
