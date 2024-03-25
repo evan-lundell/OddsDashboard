@@ -7,7 +7,7 @@ public class ValidTeamsService
         "Stetson Hatters",
         "Houston Cougars",
         "Longwood Lancers",
-        "Purdue Boilmakers",
+        "Purdue Boilermakers",
         "Montana St Bobcats",
         "Grambling St Tigers",
         "North Carolina Tar Heels",

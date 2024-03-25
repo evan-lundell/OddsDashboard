@@ -27,7 +27,7 @@ else
         _viewModel = await DashboardService.GetDashboardData();
         if (!double.TryParse(Config["OddsRefreshInterval"], out var interval))
         {
-            interval = 60000;
+            interval = 30000;
         }
         
         _timer.Interval = interval;

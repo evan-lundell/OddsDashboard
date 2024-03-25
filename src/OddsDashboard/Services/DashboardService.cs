@@ -49,7 +49,36 @@ public class DashboardService(IOddsService oddsService, IScoresService scoresSer
                     }
                 }
 
-                bookmaker ??= o.Bookmakers.First();
+                bookmaker ??= o.Bookmakers.FirstOrDefault();
+                
+                ScoresViewModel? scoresViewModel = null;
+                if (scoresLookup.TryGetValue(o.Id, out var scoreDictionary))
+                {
+                    scoresViewModel = new ScoresViewModel(scoreDictionary[o.HomeTeam], scoreDictionary[o.AwayTeam]);
+                }
+                if (bookmaker == null)
+                {
+                    var noBookmakerGame = new GameViewModel
+                    {
+                        HomeTeam = o.HomeTeam,
+                        AwayTeam = o.AwayTeam,
+                        Scores = scoresViewModel,
+                        CommenceTime = o.CommenceTime.ToLocalTime(),
+                        Spreads = null,
+                        OverUnder = null,
+                        HeadToHead = null
+                    };
+                    if (o.CommenceTime > DateTime.UtcNow)
+                    {
+                        upcomingGames.Add(noBookmakerGame);
+                    }
+                    else
+                    {
+                        liveGames.Add(noBookmakerGame);
+                    }
+                    continue;
+                }
+                
                 SpreadsViewModel? spreads = null;
                 OverUnderViewModel? overUnder = null;
                 HeadToHeadViewModel? headToHead = null;
@@ -77,11 +106,7 @@ public class DashboardService(IOddsService oddsService, IScoresService scoresSer
                     headToHead = new HeadToHeadViewModel(homeOutcome.Price, awayOutcome.Price);
                 }
 
-                ScoresViewModel? scoresViewModel = null;
-                if (scoresLookup.TryGetValue(o.Id, out var scoreDictionary))
-                {
-                    scoresViewModel = new ScoresViewModel(scoreDictionary[o.HomeTeam], scoreDictionary[o.AwayTeam]);
-                }
+                
                 
                 var game = new GameViewModel
                 {

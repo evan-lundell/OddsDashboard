@@ -5,7 +5,7 @@
 
 <div class="block m-2 py-3 px-6 bg-white border border-gray-200 rounded-lg shadow-lg hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
     <div class="grid grid-cols-7 gap-2 text-slate-200">
-        @if (GameViewModel.CommenceTime > DateTime.UtcNow)
+        @if (GameViewModel.CommenceTime > DateTime.Now)
         {
             <div class="col-span-7 text-xs">
                 @GameViewModel.CommenceTime.ToString("yyyy-MM-dd hh:mm tt")
