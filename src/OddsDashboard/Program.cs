@@ -1,6 +1,7 @@
 using OddsDashboard;
 using OddsDashboard.Components;
 using OddsDashboard.Services;
+using OddsDashboard.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,25 +27,26 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "HH:mm:ss";
 });
 
-if ((builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development") == "Development")
+// if ((builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development") == "Development")
+// {
+//     builder.Services.AddScoped<IOddsService, OddsFileService>();
+//     builder.Services.AddScoped<IScoresService, ScoresFileService>();
+// }
+// else
+// {
+builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
 {
-    builder.Services.AddScoped<IOddsService, OddsFileService>();
-    builder.Services.AddScoped<IScoresService, ScoresFileService>();
-}
-else
+    options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+});
+builder.Services.AddHttpClient<IScoresService, ScoresService>(options =>
 {
-    builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
-    {
-        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
-    });
-    builder.Services.AddHttpClient<IScoresService, ScoresService>(options =>
-    {
-        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
-    });
-}
+    options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+});
+// }
 
 builder.Services.AddSingleton<ValidTeamsService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddSingleton<IRefreshService, RefreshService>();
+builder.Services.AddHostedService<RefreshWorker>();
 
 var app = builder.Build();
 

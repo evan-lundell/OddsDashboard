@@ -10,9 +10,22 @@ public class OddsService(HttpClient client, ILogger<OddsService> logger, IConfig
         try
         {
             var apiKey = config[Constants.OddsApiKeyEnvVar]!;
-            var odds = await client.GetFromJsonAsync<IEnumerable<OddsDto>>(
-                $"v4/sports/basketball_ncaab/odds?apiKey={apiKey}&markets=spreads,h2h,totals&regions=us&oddsFormat=american",
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+            var response =
+                await client.GetAsync(
+                    $"v4/sports/basketball_ncaab/odds?apiKey={apiKey}&markets=spreads,h2h,totals&regions=us&oddsFormat=american");
+            var remainingRequests = response.Headers.TryGetValues("X-Requests-Remaining", out var headers)
+                ? headers.FirstOrDefault()
+                : null;
+            if (remainingRequests != null)
+            {
+                logger.LogInformation("Remaining Requests: {RemainingRequests}", remainingRequests);
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var odds = JsonSerializer.Deserialize<IEnumerable<OddsDto>>(content, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            });
             return odds ?? Array.Empty<OddsDto>();
         }
         catch (Exception e)

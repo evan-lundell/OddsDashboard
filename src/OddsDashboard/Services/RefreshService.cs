@@ -3,7 +3,7 @@ using OddsDashboard.Shared.ViewModels;
 
 namespace OddsDashboard.Services;
 
-public class DashboardService(IOddsService oddsService, IScoresService scoresService, ILogger<DashboardService> logger, ValidTeamsService validTeamsService) : IDashboardService
+public class RefreshService(IServiceProvider services, ILogger<RefreshService> logger, ValidTeamsService validTeamsService) : IRefreshService
 {
     private readonly string[] _bookmakerPrecedence =
     {
@@ -12,11 +12,17 @@ public class DashboardService(IOddsService oddsService, IScoresService scoresSer
         "draftkings",
         "williamhill_us"
     };
+
+    public HomeViewModel? HomeViewModel { get; private set; }
+    public event Action<HomeViewModel>? DataRefreshed;
     
-    public async Task<HomeViewModel> GetDashboardData()
+    public async Task RefreshDashboardData()
     {
         try
         {
+            using var scope = services.CreateScope();
+            var oddsService = scope.ServiceProvider.GetRequiredService<IOddsService>();
+            var scoresService = scope.ServiceProvider.GetRequiredService<IScoresService>();
             var odds = (await oddsService.GetOdds()).Where(o => validTeamsService.IsTeamValid(o.HomeTeam) && validTeamsService.IsTeamValid(o.AwayTeam));
             var scores = (await scoresService.GetScores()).Where(s => validTeamsService.IsTeamValid(s.HomeTeam) && validTeamsService.IsTeamValid(s.AwayTeam));;
             var scoresLookup = new Dictionary<string, Dictionary<string, string>>();
@@ -105,8 +111,6 @@ public class DashboardService(IOddsService oddsService, IScoresService scoresSer
                     var awayOutcome = headToHeadDto.Outcomes.First(outcome => outcome.Name == o.AwayTeam);
                     headToHead = new HeadToHeadViewModel(homeOutcome.Price, awayOutcome.Price);
                 }
-
-                
                 
                 var game = new GameViewModel
                 {
@@ -128,20 +132,22 @@ public class DashboardService(IOddsService oddsService, IScoresService scoresSer
                 }
             }
 
-            return new HomeViewModel
+            HomeViewModel =  new HomeViewModel
             {
                 LiveGames = liveGames,
                 UpcomingGames = upcomingGames
             };
+            DataRefreshed?.Invoke(HomeViewModel);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Failed to get dashboard data");
-            return new HomeViewModel
+            HomeViewModel = new HomeViewModel
             {
                 LiveGames = Array.Empty<GameViewModel>(),
                 UpcomingGames = Array.Empty<GameViewModel>()
             };
+            DataRefreshed?.Invoke(HomeViewModel);
         }
     }
 }

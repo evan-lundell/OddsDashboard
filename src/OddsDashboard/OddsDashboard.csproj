@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cronos" Version="0.8.4" />
     <ProjectReference Include="..\OddsDashboard.Client\OddsDashboard.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.2" />
   </ItemGroup>

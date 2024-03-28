@@ -11,9 +11,21 @@ public class ScoresService(HttpClient client, ILogger<ScoresService> logger, ICo
         try
         {
             var apiKey = config[Constants.OddsApiKeyEnvVar]!;
-            var scores = await client.GetFromJsonAsync<IEnumerable<ScoresDto>>(
-                $"v4/sports/basketball_ncaab/scores?apiKey={apiKey}",
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+            var response = await client.GetAsync(
+                $"v4/sports/basketball_ncaab/scores?apiKey={apiKey}");
+            var remainingRequests = response.Headers.TryGetValues("X-Requests-Remaining", out var headers)
+                ? headers.FirstOrDefault()
+                : null;
+            if (remainingRequests != null)
+            {
+                logger.LogInformation("Remaining Requests: {RemainingRequests}", remainingRequests);
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var scores = JsonSerializer.Deserialize<IEnumerable<ScoresDto>>(content, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            });
             return scores ?? Array.Empty<ScoresDto>();
         }
         catch (Exception e)

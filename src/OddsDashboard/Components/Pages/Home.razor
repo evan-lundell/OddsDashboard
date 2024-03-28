@@ -1,10 +1,8 @@
 ﻿@page "/"
-@using OddsDashboard.Services
-@using System.Timers
 @using OddsDashboard.Shared.ViewModels
+@using OddsDashboard.Services
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
-@inject IConfiguration Config
-@inject IDashboardService DashboardService
+@inject IRefreshService RefreshService
 @implements IDisposable
 
 @if (_viewModel == null)
@@ -19,33 +17,21 @@ else
 
 @code
 {
-    private readonly Timer _timer = new();
     private HomeViewModel? _viewModel;
     
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _viewModel = await DashboardService.GetDashboardData();
-        if (!double.TryParse(Config["OddsRefreshInterval"], out var interval))
-        {
-            interval = 30000;
-        }
-        
-        _timer.Interval = interval;
-        _timer.Elapsed += (_, _) => TimerCallback();
-        _timer.Start();
+        _viewModel = RefreshService.HomeViewModel;
+        RefreshService.DataRefreshed += RefreshDashboard;
     }
     
-    private void TimerCallback()
+    private void RefreshDashboard(HomeViewModel homeViewModel)
     {
-        InvokeAsync(async () =>
-        {
-            _viewModel = await DashboardService.GetDashboardData();
-            StateHasChanged();
-        });
+        _viewModel = homeViewModel;
     }
-
+    
     public void Dispose()
     {
-        _timer.Dispose();
+        RefreshService.DataRefreshed -= RefreshDashboard;
     }
 }
