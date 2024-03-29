@@ -1,20 +1,27 @@
 @using OddsDashboard.Shared.Dtos
 @using OddsDashboard.Shared.ViewModels
 
-@if (Games != null)
-{
-    <div class="p-3 m-5 border-solid border-2 border-slate-600 rounded-lg bg-gray-900">
-        <div class="flex justify-center text-slate-200 text-2xl">
-            <h1>@Title</h1>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3">
+<div class="p-3 m-5 border-solid border-2 border-slate-600 rounded-lg bg-gray-900">
+    <div class="flex justify-center text-slate-200 text-2xl">
+        <h1>@Title</h1>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3">
+        @if (Games == null)
+        {
+            for (var i = 0; i < 2; i++)
+            {
+                <GameSkeleton />
+            }
+        }
+        else
+        {
             @foreach (var game in Games)
             {
-                <Game GameViewModel="@game" />
+                <Game GameViewModel="@game"/>
             }
-        </div>
+        }
     </div>
-}
+</div>
 
 @code {
     [Parameter]

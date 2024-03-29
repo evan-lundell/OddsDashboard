@@ -5,15 +5,8 @@
 @inject IRefreshService RefreshService
 @implements IDisposable
 
-@if (_viewModel == null)
-{
-    <Skeleton />
-}
-else
-{
-    <GameSection Title="Live" Games="@_viewModel.LiveGames" />
-    <GameSection Title="Upcoming" Games="@_viewModel.UpcomingGames" />
-}
+<GameSection Title="Live" Games="@_viewModel?.LiveGames" />
+<GameSection Title="Upcoming" Games="@_viewModel?.UpcomingGames" />
 
 @code
 {
@@ -27,7 +20,11 @@ else
     
     private void RefreshDashboard(HomeViewModel homeViewModel)
     {
-        _viewModel = homeViewModel;
+        _ = InvokeAsync(() =>
+        {
+            _viewModel = homeViewModel;
+            StateHasChanged();
+        });
     }
     
     public void Dispose()

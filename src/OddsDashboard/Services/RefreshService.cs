@@ -24,7 +24,7 @@ public class RefreshService(IServiceProvider services, ILogger<RefreshService> l
             var oddsService = scope.ServiceProvider.GetRequiredService<IOddsService>();
             var scoresService = scope.ServiceProvider.GetRequiredService<IScoresService>();
             var odds = (await oddsService.GetOdds()).Where(o => validTeamsService.IsTeamValid(o.HomeTeam) && validTeamsService.IsTeamValid(o.AwayTeam));
-            var scores = (await scoresService.GetScores()).Where(s => validTeamsService.IsTeamValid(s.HomeTeam) && validTeamsService.IsTeamValid(s.AwayTeam));;
+            var scores = (await scoresService.GetScores()).Where(s => validTeamsService.IsTeamValid(s.HomeTeam) && validTeamsService.IsTeamValid(s.AwayTeam));
             var scoresLookup = new Dictionary<string, Dictionary<string, string>>();
             foreach (var scoresDto in scores.Where(s => s.Scores is { Length: > 0 }))
             {
