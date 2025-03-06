@@ -27,22 +27,22 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "HH:mm:ss";
 });
 
-// if ((builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development") == "Development")
-// {
-//     builder.Services.AddScoped<IOddsService, OddsFileService>();
-//     builder.Services.AddScoped<IScoresService, ScoresFileService>();
-// }
-// else
-// {
-builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
+if ((builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development") == "Development")
 {
-    options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
-});
-builder.Services.AddHttpClient<IScoresService, ScoresService>(options =>
+    builder.Services.AddScoped<IOddsService, OddsFileService>();
+    builder.Services.AddScoped<IScoresService, ScoresFileService>();
+}
+else
 {
-    options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
-});
-// }
+    builder.Services.AddHttpClient<IOddsService, OddsService>(options =>
+    {
+        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+    });
+    builder.Services.AddHttpClient<IScoresService, ScoresService>(options =>
+    {
+        options.BaseAddress = new Uri(builder.Configuration[Constants.OddsApiUrlEnvVar]!);
+    });
+}
 
 builder.Services.AddSingleton<ValidTeamsService>();
 builder.Services.AddSingleton<IRefreshService, RefreshService>();
